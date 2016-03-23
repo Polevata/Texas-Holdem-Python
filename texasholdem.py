@@ -17,19 +17,24 @@ class TexasHoldem:
         self.theDeck.shuffle()
         self.yourHand.extend(self.theDeck.deal(2))
         self.opponentsHand.extend(self.theDeck.deal(2))
+        self.status()
         self.bet(0)
         self.middle.extend(self.theDeck.deal(3))
+        self.status()
         if self.keepBetting == True:
             self.bet(1)
+        self.middle.extend(self.theDeck.deal())
+        self.status()
         if self.keepBetting == True:
             self.bet(2)
+        self.middle.extend(self.theDeck.deal())
+        self.status()
         if self.keepBetting == True:
             self.bet(3)
-            self.showAll()
-            result = HoldemRules.results(self.yourHand,self.middle,self.opponentsHand)
-            self.endGame(result)
-        else:
-            self.endGame()
+        self.showAll()
+        result = HoldemRules.results(self.yourHand,self.middle,self.opponentsHand)
+        self.endGame(result)
+
     def status(self):
         print("Your current net worth is ${0}.".format(self.CASH))
         print("The pot is at ${0}".format(self.pot))
@@ -46,22 +51,17 @@ class TexasHoldem:
                 print()
 
     def bet(self,round):
-        self.status()
         if round == 0:
             b = int(input('Please enter a starting bid: $'))
         else:
             b = int(input('How much are you willing to raise: $'))
         if b>self.CASH:
             b=self.CASH
-            self.CASH = 0
-            self.pot += self.CASH
             print("You go all in")
-        else:
-            self.CASH -= b
-            self.pot += b
         decision = HoldemRules.goodDeal(self.opponentsHand,self.middle,self.CASH,b)
         if decision == "call":
-            self.pot += b
+            self.pot += 2*b
+            self.CASH -= b
             print("Your opponent called. The pot is now up to ${0}".format(self.pot))
         elif decision == "fold":
             self.keepBetting = False
@@ -71,18 +71,17 @@ class TexasHoldem:
             s = str(input("Your opponent raised you by ${0}! Do you wish to call or fold: ".format(decision)))
             if "call" in s or "Call" in s:
                 if decision + b > self.CASH:
-                    self.pot += self.CASH
+                    self.pot += 2*self.CASH
+                    self.CASH = 0
                     self.keepBetting = False
                     print("You both go all in and begin the wait.")
                 else:
-                    self.pot += b + decision
-                    self.CASH -= decision
+                    self.pot += 2*(b+decision)
+                    self.CASH -= b+decision
             else:
                 self.keepBetting = False
-                print("Your oppoent smiles as you step away from the table.")
+                print("Your oppoent smiles as you step away from the table. You've lost ${0}.".format(self.pot))
         print("\n")
-        if round != 0:
-            self.middle.extend(self.theDeck.deal())
 
     def showAll(self):
         self.status()
@@ -91,18 +90,16 @@ class TexasHoldem:
             for c in self.opponentsHand:
                 print(c.__str__().splitlines()[i],end=" ")
             print()
-    def endGame(self,result=""):
+    def endGame(self,result):
         print(result)
         if "tied" in result:
             self.CASH += self.pot//2
             print("The pot of ${0} was split evenly between you.".format(self.pot))
         elif "opponent" in result:
             print("The pot of ${0} was all given to your opponent.".format(self.pot))
-        elif "won" in result:
+        else:
             self.CASH += self.pot
             print("You won all ${0} in the pot!".format(self.pot))
-        else:
-            print("You lost all ${0} in the pot!".format(self.pot))
         boo = str(input("Would you like to play again? (Y/N) "))
         if "Y" in boo or "y" in boo:
             print()
@@ -114,4 +111,3 @@ class TexasHoldem:
 if __name__ == '__main__':
     myGame = TexasHoldem()
     myGame.runGame()
-    
